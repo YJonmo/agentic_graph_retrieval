@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import itertools
+import csv
 import json
 import random
 import re
@@ -26,6 +27,7 @@ LINKS_PATH = OUTPUT_DIR / "links.jsonl"
 ABSTENTIONS_PATH = OUTPUT_DIR / "abstentions.jsonl"
 EVALUATION_PATH = OUTPUT_DIR / "evaluation.md"
 REVIEW_SAMPLE_PATH = OUTPUT_DIR / "review_sample.jsonl"
+REVIEW_LABELS_PATH = OUTPUT_DIR / "review_labels.csv"
 
 SEMANTIC_THRESHOLD = 0.92
 SEMANTIC_MARGIN = 0.05
@@ -457,12 +459,108 @@ def _write_review_sample(
     return sample
 
 
+def _write_review_labels_template(
+    links: list[dict],
+    observations: list[dict],
+    source_manifest_path: str | Path,
+    output_path: str | Path,
+    sample_size: int = 50,
+    accepted_sample: list[dict] | None = None,
+) -> int:
+    records = [_observation(row) for row in observations]
+    records_by_id = {row["observation_id"]: row for row in records}
+    accepted_pairs = {
+        tuple(sorted((f"{link['left_source_id']}:{link['left_record_id']}", f"{link['right_source_id']}:{link['right_record_id']}")))
+        for link in links
+    }
+    proposals, semantic_pairs, conflicts = _candidate_pairs(records)
+    withheld_pairs = (set(proposals) | semantic_pairs | conflicts) - accepted_pairs
+    withheld_sample = sorted(withheld_pairs)
+    random.Random(42).shuffle(withheld_sample)
+    source_catalog = _source_catalog(source_manifest_path)
+
+    existing_labels = {}
+    existing_file = Path(output_path)
+    if existing_file.exists():
+        with existing_file.open("r", encoding="utf-8", newline="") as handle:
+            for row in csv.DictReader(handle):
+                left_id = f"{row.get('left_source_id', '')}:{row.get('left_record_id', '')}"
+                right_id = f"{row.get('right_source_id', '')}:{row.get('right_record_id', '')}"
+                existing_labels[tuple(sorted((left_id, right_id)))] = row
+
+    rows = []
+    accepted_selection = accepted_sample or []
+    accepted_review_pairs = [
+        tuple(sorted((f"{row['left_source_id']}:{row['left_record_id']}", f"{row['right_source_id']}:{row['right_record_id']}")))
+        for row in accepted_selection
+    ]
+    if not accepted_review_pairs:
+        by_source_pair: dict[tuple[str, str], list[dict]] = defaultdict(list)
+        for link in links:
+            pair_key = tuple(sorted((link["left_source_id"], link["right_source_id"])))
+            by_source_pair[pair_key].append(link)
+        rng = random.Random(42)
+        queues = []
+        for pair_key, group in sorted(by_source_pair.items()):
+            shuffled_group = list(group)
+            rng.shuffle(shuffled_group)
+            queues.append(shuffled_group)
+        while len(accepted_review_pairs) < sample_size and any(queues):
+            for queue in queues:
+                if queue and len(accepted_review_pairs) < sample_size:
+                    link = queue.pop(0)
+                    accepted_review_pairs.append(tuple(sorted((
+                        f"{link['left_source_id']}:{link['left_record_id']}",
+                        f"{link['right_source_id']}:{link['right_record_id']}",
+                    ))))
+    candidates = [(pair, True) for pair in accepted_review_pairs[:sample_size]]
+    candidates.extend((pair, False) for pair in withheld_sample[:sample_size])
+    for pair, predicted_link in candidates:
+        left = records_by_id.get(pair[0])
+        right = records_by_id.get(pair[1])
+        if not left or not right:
+            continue
+        left_source = source_catalog.get(left["source_id"], {"title": left["source_id"], "tier": "Unclassified"})
+        right_source = source_catalog.get(right["source_id"], {"title": right["source_id"], "tier": "Unclassified"})
+        old_label = existing_labels.get(pair, {})
+        rows.append({
+            "left_source_id": left["source_id"],
+            "left_source_title": left_source["title"],
+            "left_source_tier": left_source["tier"],
+            "left_record_id": left["source_record_id"],
+            "left_name": left["name"],
+            "left_abn": left["abn"] or "",
+            "left_acn": left["acn"] or "",
+            "right_source_id": right["source_id"],
+            "right_source_title": right_source["title"],
+            "right_source_tier": right_source["tier"],
+            "right_record_id": right["source_record_id"],
+            "right_name": right["name"],
+            "right_abn": right["abn"] or "",
+            "right_acn": right["acn"] or "",
+            "system_predicted_link": str(predicted_link).lower(),
+            "review_same_entity": old_label.get("review_same_entity", ""),
+            "reviewer": old_label.get("reviewer", ""),
+            "review_notes": old_label.get("review_notes", ""),
+        })
+
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = list(rows[0]) if rows else ["system_predicted_link", "review_same_entity", "reviewer", "review_notes"]
+    with output.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+    return len(rows)
+
+
 def _write_evaluation(
     links: list[dict],
     reference_path: str | Path,
     output_path: str | Path,
     source_manifest_path: str | Path,
     review_sample: list[dict],
+    review_labels_path: str | Path,
 ) -> None:
     reference_pairs = _load_reference_pairs(reference_path)
     source_catalog = _source_catalog(source_manifest_path)
@@ -505,6 +603,36 @@ def _write_evaluation(
     differing_name_count = sum(not row["displayed_names_equal_case_insensitive"] for row in review_sample)
     name_only_count = sum(not row["shared_identifiers_in_observations"] for row in review_sample)
 
+    reviewed_rows = []
+    labels_file = Path(review_labels_path)
+    if labels_file.exists():
+        with labels_file.open("r", encoding="utf-8", newline="") as handle:
+            reviewed_rows = [
+                row for row in csv.DictReader(handle)
+                if row.get("review_same_entity", "").strip().casefold() in {"true", "false", "yes", "no", "1", "0"}
+            ]
+    labeled_metrics = defaultdict(lambda: {"tp": 0, "fp": 0, "fn": 0, "tn": 0})
+    for row in reviewed_rows:
+        actual = row["review_same_entity"].strip().casefold() in {"true", "yes", "1"}
+        predicted = row.get("system_predicted_link", "").strip().casefold() == "true"
+        source_group = "source:" + " / ".join(sorted((
+            row.get("left_source_title", row.get("left_source_id", "")),
+            row.get("right_source_title", row.get("right_source_id", "")),
+        )))
+        tier_group = "tier:" + " / ".join(sorted({
+            row.get("left_source_tier", "Unclassified"),
+            row.get("right_source_tier", "Unclassified"),
+        }))
+        for group in ("overall", source_group, tier_group):
+            if predicted and actual:
+                labeled_metrics[group]["tp"] += 1
+            elif predicted and not actual:
+                labeled_metrics[group]["fp"] += 1
+            elif not predicted and actual:
+                labeled_metrics[group]["fn"] += 1
+            else:
+                labeled_metrics[group]["tn"] += 1
+
     lines = [
         "# Resolution evaluation",
         "",
@@ -520,7 +648,7 @@ def _write_evaluation(
         "",
         f"The supplied `part3/links.jsonl` is treated only as a weak reference set, not ground truth. Pair overlap: {len(overlap)}; predicted links: {len(predicted_pairs)}; reference links: {len(reference_pairs)}.",
         f"Weak-reference precision: {precision:.4f}. Weak-reference recall: {recall:.4f}.",
-        "These are agreement metrics against the upstream linker and must not be interpreted as measured real-world precision/recall. The input package has no independently labeled test set, so human-audit precision and true recall are not available yet.",
+        "These are agreement metrics against the upstream linker and must not be interpreted as measured real-world precision/recall.",
         "",
         "## By source pair",
         "",
@@ -548,9 +676,24 @@ def _write_evaluation(
         "",
         f"A deterministic, source-pair-stratified sample of {len(review_sample)} links was manually inspected against the original observation rows; see `review_sample.jsonl`. {shared_identifier_count} sample pairs show a shared ABN/ACN and {name_only_count} are name-only; {differing_name_count} pairs have different displayed names.",
         "This manual spot-check assesses whether links carry the evidence claimed, not whether the records are the same real-world entity. Name differences may reflect historical legal names or trading names, but require independent adjudication. Accordingly, the spot-check is not converted into precision/recall labels.",
-        "True precision/recall by source pair or tier still requires independently labeled pairs. The tables above report only agreement with the upstream link file.",
+        f"The reviewer template `review_labels.csv` includes accepted and withheld blocked candidates. Explicitly labeled pairs: {len(reviewed_rows)}.",
+        "",
+        "## Independently Labeled Precision and Recall",
+        "",
         "",
     ])
+    if reviewed_rows:
+        lines.extend(["| Group | Labeled pairs | Precision | Recall |", "|---|---:|---:|---:|"])
+        for group, metrics in sorted(labeled_metrics.items()):
+            predicted_count = metrics["tp"] + metrics["fp"]
+            actual_positive_count = metrics["tp"] + metrics["fn"]
+            precision_value = metrics["tp"] / predicted_count if predicted_count else 0.0
+            recall_value = metrics["tp"] / actual_positive_count if actual_positive_count else 0.0
+            lines.append(f"| {group} | {sum(metrics.values())} | {precision_value:.4f} | {recall_value:.4f} |")
+    else:
+        lines.append("No independent identity labels have been entered, so true precision/recall are not estimable yet. Fill `review_same_entity` with true/false in `review_labels.csv` after source adjudication and rerun Step 4.")
+    lines.extend(["The weak-reference tables above are upstream agreement metrics only; no ground-truth scores are fabricated.", ""])
+
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(lines), encoding="utf-8")
@@ -562,6 +705,7 @@ def run_resolution(
     abstentions_path: str | Path = ABSTENTIONS_PATH,
     evaluation_path: str | Path = EVALUATION_PATH,
     review_sample_path: str | Path = REVIEW_SAMPLE_PATH,
+    review_labels_path: str | Path = REVIEW_LABELS_PATH,
     reference_path: str | Path = REFERENCE_LINK_PATH,
     source_manifest_path: str | Path = SOURCE_MANIFEST_PATH,
     database_path: str | Path = DEFAULT_DATABASE_PATH,
@@ -578,13 +722,21 @@ def run_resolution(
             for row in rows:
                 handle.write(json.dumps(row, sort_keys=True) + "\n")
     review_sample = _write_review_sample(links, observations, review_sample_path)
-    _write_evaluation(links, reference_path, evaluation_path, source_manifest_path, review_sample)
+    review_label_rows = _write_review_labels_template(
+        links,
+        observations,
+        source_manifest_path,
+        review_labels_path,
+        accepted_sample=review_sample,
+    )
+    _write_evaluation(links, reference_path, evaluation_path, source_manifest_path, review_sample, review_labels_path)
     _persist_resolution_links(links, database_path)
     return {
         "observations": len(observations),
         "links": len(links),
         "abstentions": len(abstentions),
         "review_sample": len(review_sample),
+        "review_label_rows": review_label_rows,
     }
 
 
