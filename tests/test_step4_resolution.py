@@ -1,3 +1,4 @@
+import csv
 import json
 
 import kuzu
@@ -56,14 +57,32 @@ def test_resolution_outputs_and_kuzu_evidence_are_idempotent(tmp_path):
         "abstentions_path": tmp_path / "abstentions.jsonl",
         "evaluation_path": tmp_path / "evaluation.md",
         "review_sample_path": tmp_path / "review_sample.jsonl",
+        "review_labels_path": tmp_path / "review_labels.csv",
         "reference_path": tmp_path / "reference.jsonl",
         "database_path": tmp_path / "graph.kuzu",
     }
 
     first = run_resolution(**arguments)
+    labels_path = arguments["review_labels_path"]
+    with labels_path.open("r", encoding="utf-8", newline="") as handle:
+        review_rows = list(csv.DictReader(handle))
+        fieldnames = list(review_rows[0])
+    review_rows[0]["review_same_entity"] = "true"
+    review_rows[0]["reviewer"] = "unit-test-reviewer"
+    with labels_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(review_rows)
     second = run_resolution(**arguments)
 
     assert first == second
+    with labels_path.open("r", encoding="utf-8", newline="") as handle:
+        preserved = list(csv.DictReader(handle))
+    assert preserved[0]["review_same_entity"] == "true"
+    assert preserved[0]["reviewer"] == "unit-test-reviewer"
+    evaluation = (tmp_path / "evaluation.md").read_text(encoding="utf-8")
+    assert "Explicitly labeled pairs: 1" in evaluation
+    assert "| overall | 1 | 1.0000 | 1.0000 |" in evaluation
     database = kuzu.Database(str(arguments["database_path"]))
     connection = kuzu.Connection(database)
     try:
