@@ -21,10 +21,6 @@ GRAPH_QUERIES_PATH = OUTPUT_DIR / "graph_queries.md"
 PERFORMANCE_PATH = OUTPUT_DIR / "performance.md"
 MAX_TRAVERSAL_RESULTS = 25
 DEFAULT_RESOLVE_RESULTS = 10
-ASSUMED_INPUT_TOKENS = 500
-ASSUMED_OUTPUT_TOKENS = 150
-ASSUMED_INPUT_COST_PER_MILLION = 0.15
-ASSUMED_OUTPUT_COST_PER_MILLION = 0.60
 
 
 def _normalise_name(value: str) -> str:
@@ -343,8 +339,6 @@ def run_step5(database_path: str | Path = DEFAULT_DATABASE_PATH, iterations: int
         started = time.perf_counter()
         resolve_reference(query, database_path)
         timings_ms.append((time.perf_counter() - started) * 1000)
-    input_cost = ASSUMED_INPUT_TOKENS * 1000 * ASSUMED_INPUT_COST_PER_MILLION / 1_000_000
-    output_cost = ASSUMED_OUTPUT_TOKENS * 1000 * ASSUMED_OUTPUT_COST_PER_MILLION / 1_000_000
     performance = [
         "# Retrieval Performance",
         "",
@@ -355,9 +349,9 @@ def run_step5(database_path: str | Path = DEFAULT_DATABASE_PATH, iterations: int
         f"- Number of measured calls: {len(timings_ms)}",
         "- LLM model calls in this deterministic lookup service: 0",
         "",
-        "## Estimated model cost per 1,000 agent-assisted resolutions",
+        "## Agent model usage and cost",
         "",
-        f"Illustrative estimate only: assume {ASSUMED_INPUT_TOKENS} input tokens and {ASSUMED_OUTPUT_TOKENS} output tokens per resolution, at assumed rates of ${ASSUMED_INPUT_COST_PER_MILLION:.2f}/million input tokens and ${ASSUMED_OUTPUT_COST_PER_MILLION:.2f}/million output tokens. Estimated model spend is ${input_cost + output_cost:.3f} per 1,000 calls. These rates are explicit placeholders, not verified current provider pricing; hosting, retries, tools, and graph infrastructure are excluded. The local deterministic service itself makes no cloud calls.",
+        "The deterministic resolver makes no model calls. One successful live LangGraph demonstration reported 1,315 input tokens and 71 output tokens (1,386 total). This is observed usage for one question, not a representative average. A dollar cost per 1,000 calls is not stated because provider pricing was not verified for the account/model configuration; calculate it from billed model rates and measured agent usage. Hosting, retries, and graph infrastructure are excluded.",
         "",
     ]
     PERFORMANCE_PATH.write_text("\n".join(performance), encoding="utf-8")
