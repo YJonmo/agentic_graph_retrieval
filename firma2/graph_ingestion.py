@@ -11,13 +11,13 @@ from pathlib import Path
 import kuzu
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_PROFILE_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "part4" / "profiles.jsonl"
+DEFAULT_PROFILE_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "profiles.jsonl"
 DEFAULT_REPORT_PATH = PROJECT_ROOT / "outputs" / "load_report.csv"
 DEFAULT_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "graph_loading_summary.md"
 DEFAULT_DATABASE_PATH = PROJECT_ROOT / "outputs" / "retrieval" / "firma_graph.kuzu"
-DEFAULT_OBSERVATION_DIR = PROJECT_ROOT / "outputs" / "ingestion" / "part2" / "observations"
-DEFAULT_MANIFEST_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "part2" / "source_manifest.json"
-DEFAULT_LINKS_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "part3" / "links.jsonl"
+DEFAULT_OBSERVATION_DIR = PROJECT_ROOT / "outputs" / "ingestion" / "observations"
+DEFAULT_MANIFEST_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "source_manifest.json"
+DEFAULT_LINKS_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "links.jsonl"
 DEFAULT_COVERAGE_PATH = PROJECT_ROOT / "outputs" / "retrieval" / "source_coverage.md"
 
 

@@ -17,11 +17,11 @@ import kuzu
 
 from firma2.graph_ingestion import DEFAULT_DATABASE_PATH, PROJECT_ROOT
 
-OBSERVATION_DIR = PROJECT_ROOT / "outputs" / "ingestion" / "part2" / "observations"
-PROFILE_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "part4" / "profiles.jsonl"
-REFERENCE_LINK_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "part3" / "links.jsonl"
-SOURCE_MANIFEST_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "part2" / "source_manifest.json"
-UNLINKED_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "part3" / "unlinked_queue.jsonl"
+OBSERVATION_DIR = PROJECT_ROOT / "outputs" / "ingestion" / "observations"
+PROFILE_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "profiles.jsonl"
+REFERENCE_LINK_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "links.jsonl"
+SOURCE_MANIFEST_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "source_manifest.json"
+UNLINKED_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "unlinked_queue.jsonl"
 OUTPUT_DIR = PROJECT_ROOT / "outputs" / "retrieval"
 LINKS_PATH = OUTPUT_DIR / "links.jsonl"
 ABSTENTIONS_PATH = OUTPUT_DIR / "abstentions.jsonl"
@@ -646,7 +646,7 @@ def _write_evaluation(
         "",
         "## Weak-reference comparison",
         "",
-        f"The supplied `part3/links.jsonl` is treated only as a weak reference set, not ground truth. Pair overlap: {len(overlap)}; predicted links: {len(predicted_pairs)}; reference links: {len(reference_pairs)}.",
+        f"The supplied `ingestion/links.jsonl` is treated only as a weak reference set, not ground truth. Pair overlap: {len(overlap)}; predicted links: {len(predicted_pairs)}; reference links: {len(reference_pairs)}.",
         f"Weak-reference precision: {precision:.4f}. Weak-reference recall: {recall:.4f}.",
         "These are agreement metrics against the upstream linker and must not be interpreted as measured real-world precision/recall.",
         "",
