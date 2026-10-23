@@ -18,7 +18,7 @@ from firma2.retrieval import project_dataset, resolve_reference, traverse_shared
 
 DEFAULT_MODEL = "gpt-4o-mini"
 MAX_TOOL_CALLS = 3
-ABSTENTIONS_PATH = PROJECT_ROOT / "outputs" / "retrieval" / "abstentions.jsonl"
+ABSTENTIONS_PATH = PROJECT_ROOT / "data" / "output" / "retrieval" / "abstentions.jsonl"
 ALLOWED_TOOLS = {"resolve_reference", "project_dataset", "traverse_shared_source", "search_abstentions"}
 
 

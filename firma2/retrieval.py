@@ -15,7 +15,7 @@ import kuzu
 
 from firma2.graph_ingestion import DEFAULT_DATABASE_PATH, PROJECT_ROOT
 
-OUTPUT_DIR = PROJECT_ROOT / "outputs" / "retrieval"
+OUTPUT_DIR = PROJECT_ROOT / "data" / "output" / "retrieval"
 RESOLVE_RESULTS_PATH = OUTPUT_DIR / "resolve_results.jsonl"
 GRAPH_QUERIES_PATH = OUTPUT_DIR / "graph_queries.md"
 PERFORMANCE_PATH = OUTPUT_DIR / "performance.md"

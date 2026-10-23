@@ -17,12 +17,12 @@ import kuzu
 
 from firma2.graph_ingestion import DEFAULT_DATABASE_PATH, PROJECT_ROOT
 
-OBSERVATION_DIR = PROJECT_ROOT / "outputs" / "ingestion" / "observations"
-PROFILE_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "profiles.jsonl"
-REFERENCE_LINK_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "links.jsonl"
-SOURCE_MANIFEST_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "source_manifest.json"
-UNLINKED_PATH = PROJECT_ROOT / "outputs" / "ingestion" / "unlinked_queue.jsonl"
-OUTPUT_DIR = PROJECT_ROOT / "outputs" / "retrieval"
+OBSERVATION_DIR = PROJECT_ROOT / "data" / "input" / "ingestion" / "observations"
+PROFILE_PATH = PROJECT_ROOT / "data" / "input" / "ingestion" / "profiles.jsonl"
+REFERENCE_LINK_PATH = PROJECT_ROOT / "data" / "input" / "ingestion" / "links.jsonl"
+SOURCE_MANIFEST_PATH = PROJECT_ROOT / "data" / "input" / "ingestion" / "source_manifest.json"
+UNLINKED_PATH = PROJECT_ROOT / "data" / "input" / "ingestion" / "unlinked_queue.jsonl"
+OUTPUT_DIR = PROJECT_ROOT / "data" / "output" / "retrieval"
 LINKS_PATH = OUTPUT_DIR / "links.jsonl"
 ABSTENTIONS_PATH = OUTPUT_DIR / "abstentions.jsonl"
 EVALUATION_PATH = OUTPUT_DIR / "evaluation.md"

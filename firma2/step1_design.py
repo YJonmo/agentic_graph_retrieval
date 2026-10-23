@@ -36,7 +36,7 @@ def get_initial_scope() -> dict[str, list[str] | list[dict[str, str]]]:
             "Australian business and company entities with active status and identity backbone coverage",
             "Tier 1 identity backbone sources including ABR and ASIC master records",
             "Tier 2 keyed attachment sources with strong identifiers or reliable linkage",
-            "Canonical entity graph built from outputs/ingestion profiles and evidence links",
+            "Canonical entity graph built from data/input/ingestion profiles and evidence links",
             "A bounded subset of name-based Tier 3 evidence where the risk of false link is low",
         ],
         "deferred": [

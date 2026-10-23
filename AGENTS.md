@@ -14,7 +14,7 @@ The hard part is not storing it. It is that no single store handles all of it. R
 
 The other hard part is that most sources worth having carry no shared key. A company register gives you an ACN. An enforcement register gives you a company name in a sentence, and if you attach that notice to the wrong business you have published a false claim that a real company was penalised by a regulator. That case is in this assignment on purpose.
 
-Repository reality: the graph should be built from canonical entities and evidence, not from raw source dumps. The main ingestion artifacts are the canonical entity profiles in `outputs/ingestion/profiles.jsonl`, the link evidence in `outputs/ingestion/links.jsonl`, the source manifest in `outputs/ingestion/source_manifest.json`, and the per-source observations under `outputs/ingestion/observations/`. These should drive the node/edge model, while raw source snapshots remain supporting material for provenance and explainability.
+Repository reality: the graph should be built from canonical entities and evidence, not from raw source dumps. The main ingestion artifacts are the canonical entity profiles in `data/input/ingestion/profiles.jsonl`, the link evidence in `data/input/ingestion/links.jsonl`, the source manifest in `data/input/ingestion/source_manifest.json`, and the per-source observations under `data/input/ingestion/observations/`. These should drive the node/edge model, while raw source snapshots remain supporting material for provenance and explainability.
 
 Two things we care about more than most teams:
 
@@ -62,4 +62,4 @@ Slice the volume. **Around 1 million entities on the tier 1 side is the target**
 ## The task
 The tasks for this project are broken down in .tasks/todo.md. You will be interactively asked to look into the todo.md and implement every step one by one. 
 
-There are also the outputs provided in the `outputs/ingestion` folder from a previous repository that ingested the data. Your outputs for each part of this repository should go to `outputs/retrieval` folder. 
+There are also the inputs provided in the `data/input/ingestion` folder from a previous repository that ingested the data. Your outputs for each part of this repository should go to the `data/output/retrieval` folder.

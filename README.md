@@ -5,7 +5,7 @@ Evidence-first entity resolution and agentic retrieval for Australian business a
 ## Requirements
 
 - Python 3.11 or newer
-- The provided `outputs/ingestion/` artifacts
+- The provided `data/input/ingestion/` artifacts
 - An OpenAI API key only for model-backed agent answers; deterministic graph tools and tests do not require one
 
 ## Setup
@@ -14,6 +14,8 @@ Evidence-first entity resolution and agentic retrieval for Australian business a
 uv sync
 source .venv/bin/activate
 ```
+
+Input data lives under `data/input/`, and generated outputs are written under `data/output/`.
 
 For the model-backed agent, create `.env` in the repository root:
 
@@ -33,7 +35,7 @@ python -m firma2.step4_resolution
 python -m firma2.step5_retrieval --iterations 100
 ```
 
-By default the Kuzu database is stored at `outputs/retrieval/firma_graph.kuzu`. Generated outputs are ignored by Git.
+By default the Kuzu database is stored at `data/output/retrieval/firma_graph.kuzu`. Generated outputs are ignored by Git.
 
 ## Run the demo
 
@@ -57,11 +59,11 @@ pytest -q
 
 ## Main outputs
 
-- `outputs/load_report.csv` and `outputs/graph_loading_summary.md`: ingestion counts and storage summary
-- `outputs/retrieval/source_coverage.md`: per-source observation coverage for plausible ABN/ACN values
-- `outputs/retrieval/links.jsonl`, `abstentions.jsonl`, `evaluation.md`: resolution decisions and evaluation
-- `outputs/retrieval/review_labels.csv`: blank accepted/withheld pair labels for independent reviewer adjudication
-- `outputs/retrieval/resolve_results.jsonl`, `graph_queries.md`, `performance.md`: lookup and traversal examples and measured local latency
+- `data/output/load_report.csv` and `data/output/graph_loading_summary.md`: ingestion counts and storage summary
+- `data/output/retrieval/source_coverage.md`: per-source observation coverage for plausible ABN/ACN values
+- `data/output/retrieval/links.jsonl`, `abstentions.jsonl`, `evaluation.md`: resolution decisions and evaluation
+- `data/output/retrieval/review_labels.csv`: blank accepted/withheld pair labels for independent reviewer adjudication
+- `data/output/retrieval/resolve_results.jsonl`, `graph_queries.md`, `performance.md`: lookup and traversal examples and measured local latency
 
 ## Evidence and limitations
 

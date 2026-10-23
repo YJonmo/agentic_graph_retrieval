@@ -12,7 +12,7 @@ from firma2.graph_ingestion import DEFAULT_DATABASE_PATH
 from firma2.retrieval import project_dataset, resolve_reference, traverse_shared_source
 
 ROOT = Path(__file__).resolve().parents[1]
-ABSTENTIONS_PATH = ROOT / "outputs" / "retrieval" / "abstentions.jsonl"
+ABSTENTIONS_PATH = ROOT / "data" / "output" / "retrieval" / "abstentions.jsonl"
 
 st.set_page_config(page_title="Firma Graph Workbench", page_icon="◎", layout="wide")
 
