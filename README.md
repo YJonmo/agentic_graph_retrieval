@@ -1,4 +1,4 @@
-# Firma Entity Graph
+# Agentic Graph Retrieval
 
 Evidence-first entity resolution and agentic retrieval for Australian business and compliance data. Canonical identities and source evidence are persisted in a local Kuzu graph. The LangGraph agent plans bounded calls to deterministic graph tools and answers only from their retrieved evidence.
 
