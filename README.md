@@ -11,10 +11,8 @@ Evidence-first entity resolution and agentic retrieval for Australian business a
 ## Setup
 
 ```sh
-python3 -m venv .venv
+uv sync
 source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -e .
 ```
 
 For the model-backed agent, create `.env` in the repository root:
