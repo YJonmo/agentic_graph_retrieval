@@ -9,5 +9,5 @@ __pycache__/
 *.pyd
 .DS_Store
 .tasks
-data/
+*.kuzu
 scratch/

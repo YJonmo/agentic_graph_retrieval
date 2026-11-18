@@ -54,7 +54,7 @@ python -m firma2.agent_cli "Which entity best matches Sydney Missionary Bible Co
 ## Tests
 
 ```sh
-pytest -q
+uv run pytest -q
 ```
 
 ## Main outputs
